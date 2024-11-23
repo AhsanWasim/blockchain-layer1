@@ -6,3 +6,8 @@ Contributors: Hamdan, Ahsan and Azhan
 
 
 This is a University Project for FAST NUCES ISB FALL 24
+
+Steps to use:
+clone the repo
+go build
+.\<your_exefile_name.exe>
