@@ -7,7 +7,18 @@ Contributors: Hamdan, Ahsan and Azhan
 
 This is a University Project for FAST NUCES ISB FALL 24
 
+For the first run:
+
+1. 
+delete if go.mod or go.sum file exists
+delete the contents of blockchain.json file
+
+2. 
+go mod init <your_project_name>
+go get github.com/ipfs/go-ipfs-api
+Then follow the below steps:
+
 Steps to use:
-clone the repo
-go build
-.\<your_exefile_name.exe>
+1 - clone the repo
+2- go build
+3- .\<your_exefile_name.exe>
