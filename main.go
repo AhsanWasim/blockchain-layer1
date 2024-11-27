@@ -1,5 +1,3 @@
-// Main pull reqs
-
 package main
 
 import (

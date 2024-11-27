@@ -49,7 +49,9 @@ func mineBlock(lastBlock Block, transaction Transaction) Block {
 	newBlock.Header.PreviousHash = lastBlock.Hash
 	newBlock.Header.Timestamp = time.Now().String()
 	newBlock.Transaction = transaction
-	newBlock.Header.MerkleRoot = "placeholder_merkle_root"
+
+	transactions := []string{transaction.DatasetCID, transaction.AlgorithmCID}
+	newBlock.Header.MerkleRoot = computeMerkleRoot(transactions)
 
 	// Run Python script with the dataset to get the output hash
 	output, err := runPythonScript("script.py", "dataset.csv")
@@ -78,7 +80,14 @@ func mineBlock(lastBlock Block, transaction Transaction) Block {
 func verifyBlock(block Block) bool {
 	// Fetch the dataset and algorithm data from IPFS
 	datasetData, err := fetchFromIPFS(block.Transaction.DatasetCID)
+	transactions := []string{block.Transaction.DatasetCID, block.Transaction.AlgorithmCID}
+	computedMerkleRoot := computeMerkleRoot(transactions)
+
 	if err != nil {
+		return false
+	}
+
+	if computedMerkleRoot != block.Header.MerkleRoot {
 		return false
 	}
 
@@ -106,4 +115,39 @@ func verifyBlock(block Block) bool {
 	// Compare the output hash with the block's output hash
 	computedOutputHash := fmt.Sprintf("%x", sha256.Sum256(output))
 	return computedOutputHash == block.OutputHash
+}
+
+func computeMerkleRoot(transactions []string) string {
+	if len(transactions) == 0 {
+		return ""
+	}
+
+	var hashPairs []string
+
+	// leaf nodes are being hashed for the merkle tree (leaf nodes contain transactions)
+	for _, tx := range transactions {
+		hash := sha256.Sum256([]byte(tx))
+		hashPairs = append(hashPairs, fmt.Sprintf("%x", hash))
+	}
+
+	// hashes are combined as a pair and then combined hash is calculated for parent node.
+	// for odd num of hashes, the odd number moves up without pairing
+	// it happens till the root
+	// in the end merkle root is returned
+
+	for len(hashPairs) > 1 {
+		var newLevel []string
+		for i := 0; i < len(hashPairs); i += 2 {
+			if i+1 < len(hashPairs) {
+				combinedHash := sha256.Sum256([]byte(hashPairs[i] + hashPairs[i+1]))
+				newLevel = append(newLevel, fmt.Sprintf("%x", combinedHash))
+			} else {
+				newLevel = append(newLevel, hashPairs[i])
+			}
+		}
+		hashPairs = newLevel
+	}
+	fmt.Printf("\nMerkle Root: %s\n", hashPairs[0])
+
+	return hashPairs[0]
 }
